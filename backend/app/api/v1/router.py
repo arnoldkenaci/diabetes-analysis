@@ -4,6 +4,7 @@ from typing import Optional
 
 from app.core.database import get_session
 from app.services.analysis import AnalysisService
+from app.api.v1.endpoints import insights as insights_router
 
 api_router = APIRouter()
 analysis_service = AnalysisService(db=get_session())
@@ -44,8 +45,4 @@ async def analyze_data(db: Session = Depends(get_session)):
     return await analysis_service.run_analysis()
 
 
-@api_router.get("/insights")
-async def get_insights(db: Session = Depends(get_session)):
-    """Get insights from the dataset."""
-    analysis_service.db = db
-    return await analysis_service.get_insights()
+api_router.include_router(insights_router.router, prefix="/insights")

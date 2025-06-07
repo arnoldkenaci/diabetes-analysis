@@ -78,3 +78,5 @@ class InsightsResult(BaseModel):
 
     age_groups: list[AgeGroup]
     bmi_categories: list[BMICategory]
+    age_risk: Optional[str] = None
+    bmi_risk: Optional[str] = None
