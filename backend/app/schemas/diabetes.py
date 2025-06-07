@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 
 class DiabetesRecordBase(BaseModel):
@@ -52,6 +52,9 @@ class AnalysisResult(BaseModel):
     average_glucose: float
     average_bmi: float
     average_age: float
+    recommendations: Optional[List[str]] = None
+    risk_assessment: Optional[str] = None
+    preventive_measures: Optional[List[str]] = None
 
 
 class AgeGroup(BaseModel):

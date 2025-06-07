@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, Tuple
 import time
 from functools import lru_cache
 import logging
@@ -43,23 +43,37 @@ class LLMService:
         return convert_to_hashable(data)
 
     @lru_cache(maxsize=100)
-    def generate_summary(self, data_tuple: Tuple) -> str:
-        """Generate a natural language summary of the analysis."""
+    def get_analysis_recommendations(self, data_tuple: Tuple) -> Dict[str, Any]:
+        """Generate comprehensive analysis recommendations."""
         self._rate_limit()
-
-        # Convert tuple back to dict
         data = dict(data_tuple)
 
         prompt = (
-            "Based on the following diabetes analysis data, "
-            "provide a concise summary:\n"
-            f"Risk Factors:\n"
-            f"- High Glucose: {data.get('high_glucose', False)}\n"
-            f"- Obesity: {data.get('obesity', False)}\n"
-            f"Age Risk: {data.get('age_risk', 'None')}\n"
-            f"BMI Risk: {data.get('bmi_risk', 'None')}\n\n"
-            "Please provide a 2-3 sentence summary focusing on "
-            "the most significant findings."
+            "Based on the following diabetes dataset analysis:\n"
+            f"- Total Records: {data.get('total_records', 0)}\n"
+            f"- Positive Cases: {data.get('positive_cases', 0)}\n"
+            f"- Positive Rate: {data.get('positive_rate', 0):.1f}%\n"
+            f"- Average Glucose: {data.get('avg_glucose', 0):.1f}\n"
+            f"- Average BMI: {data.get('avg_bmi', 0):.1f}\n"
+            f"- Average Age: {data.get('avg_age', 0):.1f}\n\n"
+            "Please provide a comprehensive analysis in the following format:\n\n"
+            "1. Risk Assessment:\n"
+            "[Provide a 2-3 sentence assessment of the overall risk level and "
+            "key concerns]\n\n"
+            "2. Key Recommendations:\n"
+            "- [Recommendation 1]\n"
+            "- [Recommendation 2]\n"
+            "- [Recommendation 3]\n"
+            "- [Recommendation 4]\n"
+            "- [Recommendation 5]\n\n"
+            "3. Preventive Measures:\n"
+            "- [Measure 1]\n"
+            "- [Measure 2]\n"
+            "- [Measure 3]\n"
+            "- [Measure 4]\n"
+            "- [Measure 5]\n\n"
+            "Focus on evidence-based, actionable insights that can help prevent "
+            "or manage diabetes."
         )
 
         try:
@@ -69,69 +83,137 @@ class LLMService:
             )
 
             if completion and completion.choices:
-                return completion.choices[0].message.content
-            return "No text generated"
-
-        except Exception as e:
-            logger.error(f"Generation error: {e}")
-            return f"Error generating text: {str(e)}"
-
-    @lru_cache(maxsize=100)
-    def generate_recommendations(self, data_tuple: Tuple) -> List[str]:
-        """Generate actionable recommendations based on the analysis."""
-        self._rate_limit()
-
-        # Convert tuple back to dict
-        data = dict(data_tuple)
-
-        prompt = (
-            "Based on the following diabetes analysis data, "
-            "provide 2-3 specific, actionable recommendations in a structured format:\n"
-            f"Risk Factors:\n"
-            f"- High Glucose: {data.get('high_glucose', False)}\n"
-            f"- Obesity: {data.get('obesity', False)}\n"
-            f"Age Risk: {data.get('age_risk', 'None')}\n"
-            f"BMI Risk: {data.get('bmi_risk', 'None')}\n\n"
-            "Format each recommendation as follows:\n"
-            "### [Number]. [Title]\n"
-            "[Brief explanation of why this is important]\n"
-            "**Actions:**\n"
-            "- [Specific action 1]\n"
-            "- [Specific action 2]\n"
-            "- [Specific action 3]\n\n"
-            "Please provide practical, specific recommendations "
-            "that can be implemented. Include evidence-based advice "
-            "and clear, actionable steps."
-        )
-
-        try:
-            completion = self.client.chat.completions.create(
-                model="deepseek-ai/DeepSeek-V3-0324",
-                messages=[{"role": "user", "content": prompt}],
-            )
-
-            if completion and completion.choices:
-                # Get the full response
                 content = completion.choices[0].message.content
 
-                # Split into sections based on ### headers
-                sections = content.split("###")
-                sections = [s.strip() for s in sections if s.strip()]
+                # Parse the response
+                sections = content.split("\n\n")
+                risk_assessment = ""
+                recommendations = []
+                preventive_measures = []
 
-                # Format each section
-                formatted_sections = []
+                current_section = None
                 for section in sections:
-                    # Split into title and content
-                    lines = section.split("\n", 1)
-                    if len(lines) == 2:
-                        title, content = lines
-                        # Format the section
-                        formatted = f"### {title.strip()}\n{content.strip()}"
-                        formatted_sections.append(formatted)
+                    section = section.strip()
+                    if not section:
+                        continue
 
-                return formatted_sections
-            return ["No recommendations generated"]
+                    if "Risk Assessment:" in section:
+                        current_section = "risk"
+                        risk_assessment = section.replace(
+                            "Risk Assessment:", ""
+                        ).strip()
+                    elif "Key Recommendations:" in section:
+                        current_section = "recommendations"
+                        # Extract lines that look like recommendations
+                        recommendations.extend(
+                            [
+                                line.strip("- ").strip()
+                                for line in section.split("\n")
+                                if line.strip().startswith("-")
+                                or line.strip().startswith("*")
+                            ]
+                        )
+                    elif "Preventive Measures:" in section:
+                        current_section = "measures"
+                        # Extract lines that look like preventive measures
+                        preventive_measures.extend(
+                            [
+                                line.strip("- ").strip()
+                                for line in section.split("\n")
+                                if line.strip().startswith("-")
+                                or line.strip().startswith("*")
+                            ]
+                        )
+                    elif current_section == "recommendations":
+                        # If the section does not start with a new marker,
+                        # assume it's part of the current list
+                        recommendations.extend(
+                            [
+                                line.strip("- ").strip()
+                                for line in section.split("\n")
+                                if line.strip()
+                                and (
+                                    line.strip().startswith("-")
+                                    or line.strip().startswith("*")
+                                    or current_section == "recommendations"
+                                )
+                            ]
+                        )
+                    elif current_section == "measures":
+                        # If the section does not start with a new marker,
+                        # assume it's part of the current list
+                        preventive_measures.extend(
+                            [
+                                line.strip("- ").strip()
+                                for line in section.split("\n")
+                                if line.strip()
+                                and (
+                                    line.strip().startswith("-")
+                                    or line.strip().startswith("*")
+                                    or current_section == "measures"
+                                )
+                            ]
+                        )
+
+                # Clean up empty strings from the lists
+                recommendations = [rec for rec in recommendations if rec]
+                preventive_measures = [
+                    measure for measure in preventive_measures if measure
+                ]
+
+                return {
+                    "risk_assessment": risk_assessment,
+                    "recommendations": recommendations,
+                    "preventive_measures": preventive_measures,
+                }
+
+            return {
+                "risk_assessment": "Unable to generate risk assessment at this time.",
+                "recommendations": [
+                    "Consult with healthcare providers for personalized "
+                    "recommendations",
+                    "Monitor blood glucose levels regularly",
+                    "Maintain a healthy lifestyle",
+                    "Follow a balanced diet",
+                    "Engage in regular physical activity",
+                ],
+                "preventive_measures": [
+                    "Regular health check-ups",
+                    "Maintain healthy weight",
+                    "Regular exercise",
+                    "Balanced diet",
+                    "Stress management",
+                ],
+            }
 
         except Exception as e:
             logger.error(f"Generation error: {e}")
-            return [f"Error generating recommendations: {str(e)}"]
+            return {
+                "risk_assessment": f"Error generating analysis: {str(e)}",
+                "recommendations": ["Please try again later"],
+                "preventive_measures": ["Please try again later"],
+            }
+
+
+# Create a singleton instance
+llm_service = LLMService()
+
+
+def get_llm_recommendations(
+    total_records: int,
+    positive_cases: int,
+    positive_rate: float,
+    avg_glucose: float,
+    avg_bmi: float,
+    avg_age: float,
+) -> Dict[str, Any]:
+    """Get LLM recommendations for the analysis data."""
+    data = {
+        "total_records": total_records,
+        "positive_cases": positive_cases,
+        "positive_rate": positive_rate,
+        "avg_glucose": avg_glucose,
+        "avg_bmi": avg_bmi,
+        "avg_age": avg_age,
+    }
+    return llm_service.get_analysis_recommendations(llm_service._make_hashable(data))

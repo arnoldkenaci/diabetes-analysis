@@ -6,7 +6,7 @@ from app.core.database import get_session
 from app.services.analysis import AnalysisService
 
 api_router = APIRouter()
-analysis_service = AnalysisService(db=get_session)
+analysis_service = AnalysisService(db=get_session())
 
 
 @api_router.get("/data")
@@ -25,8 +25,8 @@ async def get_data(
     outcome: Optional[bool] = Query(None, description="Filter by diabetes outcome"),
 ):
     """Get diabetes dataset with optional filters."""
+    analysis_service.db = db
     return await analysis_service.get_filtered_data(
-        db,
         min_age=min_age,
         max_age=max_age,
         min_bmi=min_bmi,
@@ -40,10 +40,12 @@ async def get_data(
 @api_router.get("/analyze")
 async def analyze_data(db: Session = Depends(get_session)):
     """Run analysis on the dataset."""
-    return await analysis_service.run_analysis(db)
+    analysis_service.db = db
+    return await analysis_service.run_analysis()
 
 
 @api_router.get("/insights")
 async def get_insights(db: Session = Depends(get_session)):
     """Get insights from the dataset."""
-    return await analysis_service.get_insights(db)
+    analysis_service.db = db
+    return await analysis_service.get_insights()

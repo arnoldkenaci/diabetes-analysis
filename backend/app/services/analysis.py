@@ -53,19 +53,38 @@ class AnalysisService:
         kpis = self.calculate_kpis()
         trends = self.analyze_trends()
 
-        # Generate insights using LLM
-        insights = await self.get_insights()
-        # Convert insights to hashable format
-        insights_tuple = self.llm_service._make_hashable(insights["insights"])
-        summary = self.llm_service.generate_summary(insights_tuple)
-        recommendations = self.llm_service.generate_recommendations(insights_tuple)
+        # Get LLM recommendations
+        recommendations = self.llm_service.get_analysis_recommendations(
+            self.llm_service._make_hashable(
+                {
+                    "total_records": kpis["total_records"],
+                    "positive_cases": kpis["positive_cases"],
+                    "positive_rate": kpis["positive_rate"],
+                    "avg_glucose": kpis["average_glucose"],
+                    "avg_bmi": kpis["average_bmi"],
+                    "avg_age": kpis["average_age"],
+                }
+            )
+        )
+
+        # Extract the risk assessment from the summary field
+        risk_assessment = recommendations.get("risk_assessment", "")
+        if not risk_assessment and "summary" in recommendations:
+            risk_assessment = recommendations["summary"]
 
         return {
-            "summary": summary,
+            "total_records": kpis["total_records"],
+            "positive_cases": kpis["positive_cases"],
+            "positive_rate": kpis["positive_rate"],
+            "average_glucose": kpis["average_glucose"],
+            "average_bmi": kpis["average_bmi"],
+            "average_age": kpis["average_age"],
             "anomalies": anomalies,
             "metrics": kpis,
             "trends": trends,
-            "recommendations": recommendations,
+            "recommendations": recommendations.get("recommendations", []),
+            "risk_assessment": risk_assessment,
+            "preventive_measures": recommendations.get("preventive_measures", []),
         }
 
     async def get_insights(self) -> Dict[str, Any]:
@@ -161,6 +180,7 @@ class AnalysisService:
 
         return {
             "total_records": total_records,
+            "positive_cases": positive_cases,
             "positive_rate": positive_rate,
             "average_glucose": round(avg_glucose, 2) if avg_glucose else 0,
             "average_bmi": round(avg_bmi, 2) if avg_bmi else 0,
