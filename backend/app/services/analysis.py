@@ -1,10 +1,11 @@
+from typing import Any, Dict, List, Optional
+
 import numpy as np
-from sqlalchemy import func, case, Integer
-from sqlalchemy.orm import Session
-from typing import Optional, Dict, Any, List
+from app.core.config import get_settings
 from app.models.diabetes import DiabetesRecord
 from app.services.llm import LLMService
-from app.core.config import get_settings
+from sqlalchemy import Integer, case, func
+from sqlalchemy.orm import Session
 
 settings = get_settings()
 
@@ -86,8 +87,6 @@ class AnalysisService:
             "risk_assessment": risk_assessment,
             "preventive_measures": recommendations.get("preventive_measures", []),
         }
-
- 
 
     def detect_anomalies(self) -> Dict[str, List[Dict[str, Any]]]:
         """Detect anomalies in the dataset using IQR method."""
@@ -267,7 +266,9 @@ class AnalysisService:
             if diabetes_rate > 0.4:
                 return f"High risk in {category} category"
 
-        return None   async def get_insights(self) -> Dict[str, Any]:
+        return None
+
+    async def get_insights(self) -> Dict[str, Any]:
         """Get insights from the dataset."""
         kpis = self.calculate_kpis()
         age_risk = self._analyze_age_risk()

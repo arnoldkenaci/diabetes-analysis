@@ -93,6 +93,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.mypy_cache/
 
 # Jupyter Notebook
 .ipynb_checkpoints

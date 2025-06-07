@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy import func, case, Integer
-from sqlalchemy.orm import Session
 from typing import Optional
+
+from fastapi import APIRouter, Depends
+from sqlalchemy import Integer, case, func
+from sqlalchemy.orm import Session
+
 from ....core.database import get_session
 from ....models.diabetes import DiabetesRecord
 from ....schemas.diabetes import InsightsResult
@@ -55,7 +57,7 @@ def _analyze_bmi_risk(db: Session) -> Optional[str]:
     return None
 
 
-@router.get("/", response_model=InsightsResult)
+@router.get("/insights", response_model=InsightsResult)
 async def get_insights(db: Session = Depends(get_session)):
     """Get insights from the dataset."""
     # Age groups analysis

@@ -1,33 +1,37 @@
+from typing import Optional
+
+from app.core.database import get_session
+from app.services.analysis import AnalysisService
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import Optional
-from ....core.database import get_session
-from ....models.diabetes import DiabetesRecord
-from ....schemas.diabetes import DiabetesRecordList
 
 router = APIRouter()
+analysis_service = AnalysisService(db=get_session())
 
 
-@router.get("/", response_model=DiabetesRecordList)
+@router.get("/data")
 async def get_data(
     db: Session = Depends(get_session),
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
-    min_age: Optional[int] = None,
-    max_age: Optional[int] = None,
-    outcome: Optional[bool] = None,
+    min_age: Optional[int] = Query(None, description="Minimum age filter"),
+    max_age: Optional[int] = Query(None, description="Maximum age filter"),
+    min_bmi: Optional[float] = Query(None, description="Minimum BMI filter"),
+    max_bmi: Optional[float] = Query(None, description="Maximum BMI filter"),
+    min_glucose: Optional[float] = Query(
+        None, description="Minimum glucose level filter"
+    ),
+    max_glucose: Optional[float] = Query(
+        None, description="Maximum glucose level filter"
+    ),
+    outcome: Optional[bool] = Query(None, description="Filter by diabetes outcome"),
 ):
-    """Get diabetes records with optional filters."""
-    query = db.query(DiabetesRecord)
-
-    if min_age is not None:
-        query = query.filter(DiabetesRecord.age >= min_age)
-    if max_age is not None:
-        query = query.filter(DiabetesRecord.age <= max_age)
-    if outcome is not None:
-        query = query.filter(DiabetesRecord.outcome == outcome)
-
-    total = query.count()
-    records = query.offset(offset).limit(limit).all()
-
-    return {"total": total, "offset": offset, "limit": limit, "data": records}
+    """Get diabetes dataset with optional filters."""
+    analysis_service.db = db
+    return await analysis_service.get_filtered_data(
+        min_age=min_age,
+        max_age=max_age,
+        min_bmi=min_bmi,
+        max_bmi=max_bmi,
+        min_glucose=min_glucose,
+        max_glucose=max_glucose,
+        outcome=outcome,
+    )
