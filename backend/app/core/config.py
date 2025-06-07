@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     EMAIL_PASSWORD: str = ""  # Gmail app password
     EMAIL_RECIPIENT: str = ""  # Recipient email address
 
+    # LLM settings
+    HUGGINGFACE_API_KEY: str = ""  # Hugging Face API key
+    LLM_RATE_LIMIT: int = 5  # requests per minute
+
     # Kaggle settings
     KAGGLE_USERNAME: str = "test_username"
     KAGGLE_KEY: str = "test_password"

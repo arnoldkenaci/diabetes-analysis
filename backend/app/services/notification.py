@@ -54,12 +54,16 @@ class NotificationService:
         insights = message.get("insights", {})
         risk_factors = insights.get("risk_factors", {})
         recommendations = message.get("recommendations", [])
+        timestamp = message.get("timestamp", "")
+
+        # Create dashboard URL with timestamp
+        dashboard_url = f"http://localhost:3000/dashboard?timestamp={timestamp}"
 
         html = f"""
         <html>
             <body>
                 <h2>Diabetes Analysis Alert</h2>
-                <p>Timestamp: {message.get('timestamp')}</p>
+                <p>Timestamp: {timestamp}</p>
                 
                 <h3>Risk Factors</h3>
                 <ul>
@@ -78,7 +82,19 @@ class NotificationService:
                     {''.join(f'<li>{rec}</li>' for rec in recommendations)}
                 </ul>
 
-                <p>View detailed analysis in the dashboard.</p>
+                <p>
+                    <a href="{dashboard_url}" style="
+                        display: inline-block;
+                        padding: 10px 20px;
+                        background-color: #4CAF50;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        margin-top: 20px;
+                    ">
+                        View Detailed Analysis
+                    </a>
+                </p>
             </body>
         </html>
         """
