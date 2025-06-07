@@ -1,0 +1,291 @@
+import numpy as np
+from sqlalchemy import func, case, Integer
+from sqlalchemy.orm import Session
+from typing import Optional, Dict, Any, List
+
+# This will be created later
+from app.models.diabetes import DiabetesRecord  # type: ignore
+
+
+class AnalysisService:
+    """Service for analyzing diabetes dataset."""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    async def get_filtered_data(
+        self,
+        min_age: Optional[int] = None,
+        max_age: Optional[int] = None,
+        min_bmi: Optional[float] = None,
+        max_bmi: Optional[float] = None,
+        min_glucose: Optional[float] = None,
+        max_glucose: Optional[float] = None,
+        outcome: Optional[bool] = None,
+    ) -> List[DiabetesRecord]:
+        """Get filtered diabetes data."""
+        query = self.db.query(DiabetesRecord)
+
+        if min_age is not None:
+            query = query.filter(DiabetesRecord.age >= min_age)
+        if max_age is not None:
+            query = query.filter(DiabetesRecord.age <= max_age)
+        if min_bmi is not None:
+            query = query.filter(DiabetesRecord.bmi >= min_bmi)
+        if max_bmi is not None:
+            query = query.filter(DiabetesRecord.bmi <= max_bmi)
+        if min_glucose is not None:
+            query = query.filter(DiabetesRecord.glucose >= min_glucose)
+        if max_glucose is not None:
+            query = query.filter(DiabetesRecord.glucose <= max_glucose)
+        if outcome is not None:
+            query = query.filter(DiabetesRecord.outcome == outcome)
+
+        return query.all()
+
+    async def run_analysis(self) -> Dict[str, Any]:
+        """Run comprehensive analysis on the dataset."""
+        # Get all analysis results
+        anomalies = self.detect_anomalies()
+        kpis = self.calculate_kpis()
+        trends = self.analyze_trends()
+
+        # Generate recommendations
+        recommendations = self._generate_recommendations(
+            kpis["positive_rate"] / 100,  # Convert percentage to decimal
+            kpis["high_glucose_rate"] / 100,
+            kpis["obesity_rate"] / 100,
+        )
+
+        return {
+            "summary": "Diabetes dataset analysis results",
+            "anomalies": anomalies,
+            "metrics": kpis,
+            "trends": trends,
+            "recommendations": recommendations,
+        }
+
+    async def get_insights(self) -> Dict[str, Any]:
+        """Get insights from the dataset."""
+        analysis_results = await self.run_analysis()
+        kpis = analysis_results["metrics"]
+
+        insights = {
+            "risk_factors": {
+                "high_glucose": kpis["high_glucose_rate"] > 30,
+                "obesity": kpis["obesity_rate"] > 25,
+            },
+            "age_risk": self._analyze_age_risk(),
+            "bmi_risk": self._analyze_bmi_risk(),
+        }
+
+        return {
+            "insights": insights,
+            "recommendations": analysis_results["recommendations"],
+        }
+
+    def detect_anomalies(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Detect anomalies in the dataset using IQR method."""
+        records = self.db.query(DiabetesRecord).all()
+
+        # Convert to numpy arrays for analysis
+        data = {
+            "glucose": np.array([r.glucose for r in records]),
+            "bmi": np.array([r.bmi for r in records]),
+            "age": np.array([r.age for r in records]),
+            "blood_pressure": np.array([r.blood_pressure for r in records]),
+        }
+
+        anomalies = {}
+        for field, values in data.items():
+            # Calculate IQR
+            q1 = np.percentile(values, 25)
+            q3 = np.percentile(values, 75)
+            iqr = q3 - q1
+
+            # Define bounds
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
+
+            # Find anomalies
+            condition = (values < lower_bound) | (values > upper_bound)
+            anomaly_indices = np.where(condition)[0]
+
+            anomalies[field] = [
+                {
+                    "value": float(values[i]),
+                    "record_id": records[i].id,
+                    "deviation": float(values[i] - np.mean(values)),
+                }
+                for i in anomaly_indices
+            ]
+
+        return anomalies
+
+    def calculate_kpis(self) -> Dict[str, float]:
+        """Calculate key performance indicators."""
+        # Get total records
+        total_records = self.db.query(DiabetesRecord).count()
+
+        # Calculate positive cases
+        positive_cases = (
+            self.db.query(DiabetesRecord)
+            .filter(DiabetesRecord.outcome.is_(True))
+            .count()
+        )
+
+        # Calculate average values
+        avg_glucose = self.db.query(func.avg(DiabetesRecord.glucose)).scalar()
+        avg_bmi = self.db.query(func.avg(DiabetesRecord.bmi)).scalar()
+        avg_age = self.db.query(func.avg(DiabetesRecord.age)).scalar()
+
+        # Calculate risk factors
+        high_glucose = (
+            self.db.query(DiabetesRecord).filter(DiabetesRecord.glucose > 140).count()
+        )
+
+        high_bmi = self.db.query(DiabetesRecord).filter(DiabetesRecord.bmi > 30).count()
+
+        # Calculate rates
+        positive_rate = (
+            (positive_cases / total_records) * 100 if total_records > 0 else 0
+        )
+        high_glucose_rate = (
+            (high_glucose / total_records) * 100 if total_records > 0 else 0
+        )
+        obesity_rate = (high_bmi / total_records) * 100 if total_records > 0 else 0
+
+        return {
+            "total_records": total_records,
+            "positive_rate": positive_rate,
+            "average_glucose": round(avg_glucose, 2) if avg_glucose else 0,
+            "average_bmi": round(avg_bmi, 2) if avg_bmi else 0,
+            "average_age": round(avg_age, 2) if avg_age else 0,
+            "high_glucose_rate": high_glucose_rate,
+            "obesity_rate": obesity_rate,
+        }
+
+    def analyze_trends(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Analyze trends in the dataset."""
+        # Age group analysis
+        age_groups = (
+            self.db.query(
+                func.floor(DiabetesRecord.age / 10) * 10,
+                func.count(DiabetesRecord.id),
+                func.avg(DiabetesRecord.outcome.cast(Integer)),
+            )
+            .group_by(func.floor(DiabetesRecord.age / 10))
+            .all()
+        )
+
+        # BMI category analysis
+        bmi_case = case(
+            {
+                DiabetesRecord.bmi < 18.5: "Underweight",
+                DiabetesRecord.bmi < 25: "Normal",
+                DiabetesRecord.bmi < 30: "Overweight",
+            },
+            else_="Obese",
+        )
+
+        bmi_categories = (
+            self.db.query(
+                bmi_case.label("category"),
+                func.count(DiabetesRecord.id),
+                func.avg(DiabetesRecord.outcome.cast(Integer)),
+            )
+            .group_by(bmi_case)
+            .all()
+        )
+
+        return {
+            "age_trends": [
+                {
+                    "age_range": f"{age}-{age+9}",
+                    "count": count,
+                    "diabetes_rate": round(rate * 100, 2),
+                }
+                for age, count, rate in age_groups
+            ],
+            "bmi_trends": [
+                {
+                    "category": category,
+                    "count": count,
+                    "diabetes_rate": round(rate * 100, 2),
+                }
+                for category, count, rate in bmi_categories
+            ],
+        }
+
+    def _generate_recommendations(
+        self,
+        diabetes_rate: float,
+        high_glucose_rate: float,
+        obesity_rate: float,
+    ) -> List[str]:
+        """Generate recommendations based on analysis results."""
+        recommendations = []
+
+        if diabetes_rate > 0.3:
+            recommendations.append(
+                "High diabetes rate detected. Consider implementing "
+                "preventive measures and regular screenings."
+            )
+        if high_glucose_rate > 0.3:
+            recommendations.append(
+                "High glucose levels observed. Recommend dietary "
+                "interventions and regular monitoring."
+            )
+        if obesity_rate > 0.25:
+            recommendations.append(
+                "High obesity rate detected. Consider lifestyle "
+                "intervention programs."
+            )
+
+        return recommendations
+
+    def _analyze_age_risk(self) -> Optional[str]:
+        """Analyze age-based risk factors."""
+        records = self.db.query(DiabetesRecord).all()
+        age_groups = {
+            "0-30": (0, 30),
+            "31-50": (31, 50),
+            "51-70": (51, 70),
+            "70+": (71, float("inf")),
+        }
+
+        for group, (min_age, max_age) in age_groups.items():
+            group_records = [r for r in records if min_age <= r.age <= max_age]
+            if not group_records:
+                continue
+
+            diabetes_rate = sum(1 for r in group_records if r.outcome) / len(
+                group_records
+            )
+            if diabetes_rate > 0.5:
+                return f"High risk in age group {group}"
+
+        return None
+
+    def _analyze_bmi_risk(self) -> Optional[str]:
+        """Analyze BMI-based risk factors."""
+        records = self.db.query(DiabetesRecord).all()
+        bmi_categories = {
+            "Underweight": (0, 18.5),
+            "Normal": (18.5, 25),
+            "Overweight": (25, 30),
+            "Obese": (30, float("inf")),
+        }
+
+        for category, (min_bmi, max_bmi) in bmi_categories.items():
+            category_records = [r for r in records if min_bmi <= r.bmi < max_bmi]
+            if not category_records:
+                continue
+
+            diabetes_rate = sum(1 for r in category_records if r.outcome) / len(
+                category_records
+            )
+            if diabetes_rate > 0.4:
+                return f"High risk in {category} category"
+
+        return None

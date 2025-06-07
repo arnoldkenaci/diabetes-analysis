@@ -12,6 +12,10 @@ alembic==1.13.1
 # Data processing
 pandas==2.2.0
 kaggle==1.5.16
+numpy==1.26.4
+
+# Scheduling
+apscheduler==3.10.4
 
 # Pydantic
 pydantic==2.6.1
