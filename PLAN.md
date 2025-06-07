@@ -63,13 +63,13 @@
 
 ## Phase 6: Frontend Development
 
-- [ ] Set up React
-- [ ] Build interactive dashboard:
-  - [ ] Dataset table with filters/sorting
-  - [ ] Highlight significant data points
-  - [ ] Display AI-generated insights
-- [ ] Connect to backend via API
-- [ ] Add basic routing if needed
+- [x] Set up React
+- [x] Build interactive dashboard:
+  - [x] Dataset table with filters/sorting
+  - [x] Highlight significant data points
+  - [x] Display AI-generated insights
+- [x] Connect to backend via API
+- [x] Add basic routing if needed
 
 ---
 
