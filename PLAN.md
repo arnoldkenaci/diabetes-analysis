@@ -89,14 +89,14 @@
   - [ ] API docs
   - [ ] Walkthrough
 - [ ] Add code comments and cleanup
-- [ ] (Optional) Add Docker setup for backend/frontend
+- [x] (Optional) Add Docker setup for backend/frontend
 
 ---
 
 ## Optional Additions
 
 - [ ] User authentication (e.g., JWT)
-- [ ] Dataset upload feature via UI
-- [ ] Export dashboard to PDF
+- [x] Dataset upload feature via UI
+- [x] Export dashboard to PDF
 - [ ] Historical insight comparison
-- [ ] Add charts (Chart.js, Recharts, etc.)
+- [x] Add charts (Chart.js, Recharts, etc.)

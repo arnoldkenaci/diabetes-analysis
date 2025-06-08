@@ -1,11 +1,46 @@
 services:
-  postgres:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=dataset_analysis
+      - DB_HOST=db
+      - DB_PORT=5432
+      - KAGGLE_USERNAME=arnoldkenaci
+      - KAGGLE_KEY=b06960c7b99dc22c86cba403f3162583
+      - EMAIL_USER="arnold.kenaci22@gmail.com"
+      - EMAIL_PASSWORD="usyq icfu uwvj wovn"
+      - EMAIL_RECIPIENT="arnold.kenaci1@gmail.com"
+      - HUGGINGFACE_API_KEY=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
+      - LLM_RATE_LIMIT=5
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - /app/__pycache__
+      - /app/.pytest_cache
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  db:
     image: postgres:17.5
     container_name: dataset_analysis_db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: dataset_analysis
+      POSTGRES_DB: diabetes_analysis
     ports:
       - "5432:5432"
     volumes:
@@ -17,4 +52,4 @@ services:
       retries: 5
 
 volumes:
-  postgres_data: 
+  postgres_data:
