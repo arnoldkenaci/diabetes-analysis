@@ -1,11 +1,15 @@
 from functools import lru_cache
 from typing import List
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Application settings."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env", case_sensitive=True, extra="ignore"
+    )
 
     # API settings
     API_V1_STR: str = "/api/v1"
@@ -19,7 +23,7 @@ class Settings(BaseSettings):
     DB_PORT: str = "5432"
 
     # Analysis settings
-    ANALYSIS_INTERVAL_MINUTES: int = 60
+    ANALYSIS_INTERVAL_MINUTES: int = 10000
     ALERT_THRESHOLD: float = 0.3  # 30% threshold for alerts
 
     # Notification settings
@@ -41,10 +45,6 @@ class Settings(BaseSettings):
 
     # CORS settings
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 @lru_cache()

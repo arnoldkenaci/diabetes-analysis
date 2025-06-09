@@ -1,9 +1,10 @@
-from typing import Dict, Any, Tuple
+import logging
 import time
 from functools import lru_cache
-import logging
-from huggingface_hub import InferenceClient
+from typing import Any, Dict, Tuple
+
 from app.core.config import get_settings
+from huggingface_hub import InferenceClient
 
 settings = get_settings()
 logger = logging.getLogger(__name__)

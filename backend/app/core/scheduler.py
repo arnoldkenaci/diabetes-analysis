@@ -1,53 +1,61 @@
-from datetime import datetime, timedelta
-from typing import Optional
 from sqlalchemy.orm import Session
-from ..services.analysis import AnalysisService
-from ..services.notification import NotificationService
+
 from ..core.config import get_settings
+from ..services.analysis import AnalysisService
+from ..services.insights import InsightsService
+from ..services.notification import NotificationService
 
 settings = get_settings()
 
 
 class AnalysisScheduler:
-    """Scheduler for periodic analysis."""
+    """Scheduler for background analysis tasks."""
 
     def __init__(self, db: Session):
         self.db = db
-        self.analysis_service = AnalysisService(db)
         self.notification_service = NotificationService()
-        self.last_run: Optional[datetime] = None
+        self.analysis_service = AnalysisService(
+            insights_service=InsightsService(db=db),
+            notification_service=self.notification_service,
+            db=db,
+        )
 
-    async def run_periodic_analysis(self) -> None:
-        """Run analysis periodically."""
-        current_time = datetime.now()
+    async def run_background_analysis(self, user_id: str, user_attempt_id: str) -> None:
+        """Run analysis in background for user-uploaded data.
 
-        # Check if it's time to run analysis
-        if self.last_run is None or current_time - self.last_run > timedelta(
-            minutes=settings.ANALYSIS_INTERVAL_MINUTES
-        ):
-            # Run analysis
-            results = await self.analysis_service.run_analysis()
+        Args:
+            user_id: The ID of the user who uploaded the data
+            user_attempt_id: The ID of the user's upload attempt
+        """
+        try:
+            # Run analysis for the specific user's data
+            results = await self.analysis_service.analyze_user_data(user_id)
             insights = await self.analysis_service.get_insights()
 
-            # Check if we need to send notifications
-            if self._should_send_notification(insights):
-                await self.notification_service.send_notification(
-                    {
-                        "type": "analysis_alert",
-                        "timestamp": current_time.isoformat(),
-                        "insights": insights,
-                        "recommendations": results["recommendations"],
-                    }
-                )
+            # Send notification to the user
+            message = (
+                f"Your diabetes risk analysis is complete!\n"
+                f"Risk Level: {results['risk_level']}\n"
+                f"Key Findings: {results['key_findings']}\n"
+                f"Recommendations: {results['recommendations']}"
+            )
 
-            self.last_run = current_time
+            await self.notification_service.send_notification(
+                user_id=user_id,
+                subject="Diabetes Risk Analysis Complete",
+                message=message,
+                data={
+                    "risk_level": results["risk_level"],
+                    "key_findings": results["key_findings"],
+                    "recommendations": results["recommendations"],
+                    "insights": insights,
+                },
+            )
 
-    def _should_send_notification(self, insights: dict) -> bool:
-        """Check if notification should be sent based on insights."""
-        risk_factors = insights["insights"]["risk_factors"]
-        return (
-            risk_factors["high_glucose"]
-            or risk_factors["obesity"]
-            or insights["insights"]["age_risk"] is not None
-            or insights["insights"]["bmi_risk"] is not None
-        )
+        except Exception as e:
+            # Log the error and notify the user
+            error_message = f"An error occurred during analysis: {str(e)}"
+            await self.notification_service.send_notification(
+                user_id=user_id, subject="Analysis Error", message=error_message
+            )
+            raise e

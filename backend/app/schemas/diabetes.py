@@ -1,20 +1,24 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
+
+from app.models.diabetes import DataSource
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DiabetesRecordBase(BaseModel):
     """Base diabetes record schema."""
 
-    pregnancies: int
-    glucose: int
-    blood_pressure: int
-    skin_thickness: int
-    insulin: int
-    bmi: float
-    diabetes_pedigree: float
-    age: int
-    outcome: bool
+    model_config = ConfigDict(from_attributes=True)
+
+    pregnancies: int = Field(..., ge=0, le=20)
+    glucose: int = Field(..., ge=0, le=300)
+    blood_pressure: int = Field(..., ge=0, le=150)
+    skin_thickness: int = Field(..., ge=0, le=100)
+    insulin: int = Field(..., ge=0, le=1000)
+    bmi: float = Field(..., ge=0, le=100)
+    diabetes_pedigree: float = Field(..., ge=0, le=3)
+    age: int = Field(..., ge=0, le=120)
+    source: DataSource
 
 
 class DiabetesRecordCreate(DiabetesRecordBase):
@@ -24,18 +28,17 @@ class DiabetesRecordCreate(DiabetesRecordBase):
 
 
 class DiabetesRecord(DiabetesRecordBase):
-    """Schema for diabetes record response."""
+    """Schema for diabetes record with ID and timestamps."""
 
-    id: int
+    id: str
     created_at: datetime
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class DiabetesRecordList(BaseModel):
     """Schema for list of diabetes records."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     total: int
     offset: int
@@ -45,6 +48,8 @@ class DiabetesRecordList(BaseModel):
 
 class AnalysisResult(BaseModel):
     """Schema for analysis results."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     total_records: int
     positive_cases: int
@@ -57,17 +62,13 @@ class AnalysisResult(BaseModel):
     preventive_measures: Optional[List[str]] = None
 
 
-class AgeGroup(BaseModel):
-    """Schema for age group analysis."""
-
+class AgeGroupAnalysis(BaseModel):
     age_range: str
     count: int
     diabetes_rate: float
 
 
-class BMICategory(BaseModel):
-    """Schema for BMI category analysis."""
-
+class BMICategoryAnalysis(BaseModel):
     category: str
     count: int
     diabetes_rate: float
@@ -76,7 +77,7 @@ class BMICategory(BaseModel):
 class InsightsResult(BaseModel):
     """Schema for insights results."""
 
-    age_groups: list[AgeGroup]
-    bmi_categories: list[BMICategory]
+    age_groups: List[AgeGroupAnalysis]
+    bmi_categories: List[BMICategoryAnalysis]
     age_risk: Optional[str] = None
     bmi_risk: Optional[str] = None

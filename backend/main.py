@@ -1,26 +1,28 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import get_settings
-from app.api.v1.router import api_router
-from app.core.scheduler import AnalysisScheduler
-from app.core.database import SessionLocal
-import asyncio
 from contextlib import asynccontextmanager
 
+from app.api.v1.router import api_router
+from app.core.config import get_settings
+from app.core.database import SessionLocal
+from app.core.scheduler import AnalysisScheduler
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 settings = get_settings()
+
+# Global scheduler instance
+scheduler = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
+    global scheduler
+
     # Create database session
     db = SessionLocal()
 
     # Initialize scheduler
     scheduler = AnalysisScheduler(db)
-
-    # Start periodic analysis
-    asyncio.create_task(scheduler.run_periodic_analysis())
 
     yield
 

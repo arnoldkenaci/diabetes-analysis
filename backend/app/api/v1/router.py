@@ -6,6 +6,6 @@ from fastapi import APIRouter
 api_router = APIRouter()
 
 
-api_router.include_router(data_router.router)
-api_router.include_router(insights_router.router)
-api_router.include_router(analyze_router.router)
+api_router.include_router(data_router.router, prefix="/data")
+api_router.include_router(insights_router.router, prefix="/insights")
+api_router.include_router(analyze_router.router, prefix="/analyze")

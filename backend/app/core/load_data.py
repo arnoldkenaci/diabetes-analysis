@@ -1,7 +1,8 @@
 import pandas as pd
 from sqlalchemy.orm import Session
+
+from ..models.diabetes import DataSource, DiabetesRecord
 from .database import SessionLocal
-from ..models.diabetes import DiabetesRecord
 from .dataset import DatasetManager
 
 
@@ -50,6 +51,7 @@ def load_dataset_to_db(dataset_name: str = "diabetes") -> None:
                 diabetes_pedigree=row["diabetes_pedigree"],
                 age=row["age"],
                 outcome=bool(row["outcome"]),
+                source=DataSource.DATASET,
             )
             for _, row in df.iterrows()
         ]
