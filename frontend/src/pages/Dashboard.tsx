@@ -1,10 +1,10 @@
 import { Box, Grid, Paper, Typography, Button } from "@mui/material";
 import { FileUpload } from "../components/FileUpload";
-import DashboardCharts from "../components/DashboardCharts";
 import { useQuery } from "@tanstack/react-query";
 import { getDiabetesRecords } from "../services/api";
 import { exportDashboardToPDF } from "../services/pdfExport";
 import { Download as DownloadIcon } from "@mui/icons-material";
+import UserAttempts from "../components/UserAttempts";
 
 const Dashboard = () => {
   const {
@@ -60,11 +60,8 @@ const Dashboard = () => {
             <FileUpload onUploadSuccess={handleUploadSuccess} />
           </Paper>
         </Grid>
-
         <Grid item xs={12}>
-          <div id="dashboard-content">
-            <DashboardCharts records={records} />
-          </div>
+          <UserAttempts />
         </Grid>
       </Grid>
     </Box>

@@ -58,12 +58,29 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
   };
 
   return (
-    <Box sx={{ p: 3, border: "1px dashed #ccc", borderRadius: 2 }}>
+    <Box
+      sx={{
+        p: 3,
+        border: "1px dashed #ccc",
+        borderRadius: 2,
+        display: "flex",
+        alignItems: "center",
+        flexDirection: "column",
+      }}
+    >
       <Typography variant="h6" gutterBottom>
         Upload Dataset
       </Typography>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+      <Box
+        sx={{
+          gap: 2,
+          mb: 2,
+          display: "flex",
+          alignItems: "center",
+          flexDirection: "column",
+        }}
+      >
         <Button
           variant="contained"
           component="label"

@@ -46,28 +46,6 @@ const Layout = ({ children }: LayoutProps) => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Diabetes Analysis Dashboard
           </Typography>
-          <Button
-            color="inherit"
-            onClick={() => navigate("/")}
-            sx={{
-              backgroundColor: isActive("/")
-                ? "rgba(255, 255, 255, 0.1)"
-                : "transparent",
-            }}
-          >
-            Dashboard
-          </Button>
-          <Button
-            color="inherit"
-            onClick={() => navigate("/analysis")}
-            sx={{
-              backgroundColor: isActive("/analysis")
-                ? "rgba(255, 255, 255, 0.1)"
-                : "transparent",
-            }}
-          >
-            Analysis
-          </Button>
         </Toolbar>
       </AppBar>
       <Container

@@ -42,6 +42,7 @@ import {
 import type { DiabetesRecord } from "../types/diabetes";
 import type { AnalysisResult } from "../types/analysis";
 import { api } from "../services/api";
+import UserAttempts from "./UserAttempts";
 
 // Register ChartJS components
 ChartJS.register(
@@ -177,29 +178,8 @@ const DashboardCharts: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Glucose Levels Over Time
-            </Typography>
-            <Line data={glucoseData} />
-          </Paper>
-        </Grid>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              BMI Distribution
-            </Typography>
-            <Bar data={bmiData} />
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Age Distribution
-            </Typography>
-            <Pie data={ageData} />
-          </Paper>
+          <UserAttempts />
         </Grid>
         <Grid item xs={12} md={6}>
           <Card>
@@ -235,6 +215,30 @@ const DashboardCharts: React.FC = () => {
               </List>
             </CardContent>
           </Card>
+        </Grid>
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Glucose Levels Over Time
+            </Typography>
+            <Line data={glucoseData} />
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              BMI Distribution
+            </Typography>
+            <Bar data={bmiData} />
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Age Distribution
+            </Typography>
+            <Pie data={ageData} />
+          </Paper>
         </Grid>
         <Grid item xs={12} md={6}>
           <Card>
