@@ -1,83 +1,60 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from app.models.diabetes import DataSource
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 
 class DiabetesRecordBase(BaseModel):
-    """Base diabetes record schema."""
+    """Base schema for diabetes record data."""
 
-    model_config = ConfigDict(from_attributes=True)
-
-    pregnancies: int = Field(..., ge=0, le=20)
-    glucose: int = Field(..., ge=0, le=300)
-    blood_pressure: int = Field(..., ge=0, le=150)
-    skin_thickness: int = Field(..., ge=0, le=100)
-    insulin: int = Field(..., ge=0, le=1000)
-    bmi: float = Field(..., ge=0, le=100)
-    diabetes_pedigree: float = Field(..., ge=0, le=3)
-    age: int = Field(..., ge=0, le=120)
-    source: DataSource
+    pregnancies: int = Field(ge=0)
+    glucose: int = Field(ge=0)
+    blood_pressure: int = Field(ge=0)
+    skin_thickness: int = Field(ge=0)
+    insulin: int = Field(ge=0)
+    bmi: float = Field(ge=0.0)
+    diabetes_pedigree: float = Field(ge=0.0)
+    age: int = Field(ge=0)
+    outcome: bool = False
 
 
 class DiabetesRecordCreate(DiabetesRecordBase):
-    """Schema for creating a diabetes record."""
+    """Schema for creating a new diabetes record."""
 
-    pass
+    user_id: int = Field(gt=0, description="ID of the user who owns this record")
 
 
-class DiabetesRecord(DiabetesRecordBase):
-    """Schema for diabetes record with ID and timestamps."""
+class DiabetesRecordUpdate(BaseModel):
+    """Schema for updating a diabetes record."""
 
-    id: str
+    pregnancies: Optional[int] = Field(None, ge=0)
+    glucose: Optional[int] = Field(None, ge=0)
+    blood_pressure: Optional[int] = Field(None, ge=0)
+    skin_thickness: Optional[int] = Field(None, ge=0)
+    insulin: Optional[int] = Field(None, ge=0)
+    bmi: Optional[float] = Field(None, ge=0.0)
+    diabetes_pedigree: Optional[float] = Field(None, ge=0.0)
+    age: Optional[int] = Field(None, ge=0)
+    outcome: Optional[bool] = None
+
+
+class DiabetesRecordInDB(DiabetesRecordBase):
+    """Schema for diabetes record data as stored in the database."""
+
+    id: int
+    user_id: Optional[int] = None
+    source: DataSource
     created_at: datetime
     updated_at: Optional[datetime] = None
 
+    class Config:
+        """Pydantic config."""
 
-class DiabetesRecordList(BaseModel):
-    """Schema for list of diabetes records."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    total: int
-    offset: int
-    limit: int
-    data: list[DiabetesRecord]
+        from_attributes = True
 
 
-class AnalysisResult(BaseModel):
-    """Schema for analysis results."""
+class DiabetesRecord(DiabetesRecordInDB):
+    """Schema for diabetes record data returned to the client."""
 
-    model_config = ConfigDict(from_attributes=True)
-
-    total_records: int
-    positive_cases: int
-    positive_rate: float
-    average_glucose: float
-    average_bmi: float
-    average_age: float
-    recommendations: Optional[List[str]] = None
-    risk_assessment: Optional[str] = None
-    preventive_measures: Optional[List[str]] = None
-
-
-class AgeGroupAnalysis(BaseModel):
-    age_range: str
-    count: int
-    diabetes_rate: float
-
-
-class BMICategoryAnalysis(BaseModel):
-    category: str
-    count: int
-    diabetes_rate: float
-
-
-class InsightsResult(BaseModel):
-    """Schema for insights results."""
-
-    age_groups: List[AgeGroupAnalysis]
-    bmi_categories: List[BMICategoryAnalysis]
-    age_risk: Optional[str] = None
-    bmi_risk: Optional[str] = None
+    pass

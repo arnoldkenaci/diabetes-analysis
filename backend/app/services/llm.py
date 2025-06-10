@@ -57,24 +57,37 @@ class LLMService:
             f"- Average Glucose: {data.get('avg_glucose', 0):.1f}\n"
             f"- Average BMI: {data.get('avg_bmi', 0):.1f}\n"
             f"- Average Age: {data.get('avg_age', 0):.1f}\n\n"
-            "Please provide a comprehensive analysis in the following format:\n\n"
+            "Please provide a comprehensive analysis in the following format, keeping each section concise and email-friendly:\n\n"
             "1. Risk Assessment:\n"
-            "[Provide a 2-3 sentence assessment of the overall risk level and "
-            "key concerns]\n\n"
+            "[Provide a clear, concise 2-3 sentence assessment of the overall risk level. "
+            "Use simple language and avoid medical jargon. Focus on key concerns that are "
+            "easy to understand and actionable.]\n\n"
             "2. Key Recommendations:\n"
-            "- [Recommendation 1]\n"
-            "- [Recommendation 2]\n"
-            "- [Recommendation 3]\n"
-            "- [Recommendation 4]\n"
-            "- [Recommendation 5]\n\n"
+            "[Provide 3-5 specific, actionable recommendations. Each recommendation should:\n"
+            "- Be clear and concise (1-2 sentences)\n"
+            "- Start with an action verb\n"
+            "- Be practical and implementable\n"
+            "- Focus on lifestyle changes and preventive measures\n"
+            "- Avoid complex medical terminology]\n\n"
             "3. Preventive Measures:\n"
-            "- [Measure 1]\n"
-            "- [Measure 2]\n"
-            "- [Measure 3]\n"
-            "- [Measure 4]\n"
-            "- [Measure 5]\n\n"
+            "[Provide 3-5 specific preventive measures. Each measure should:\n"
+            "- Be easy to understand and implement\n"
+            "- Include specific, measurable actions\n"
+            "- Focus on daily habits and routines\n"
+            "- Be realistic and achievable\n"
+            "- Include timeframes where relevant]\n\n"
+            "Important formatting guidelines:\n"
+            "- Keep all text concise and easy to read\n"
+            "- Use simple, clear language\n"
+            "- Avoid medical jargon unless necessary\n"
+            "- Make all points actionable and specific\n"
+            "- Focus on practical, daily-life changes\n"
+            "- Ensure each section is self-contained and clear\n"
+            "- Keep recommendations and measures to 1-2 lines each\n"
+            "- Use positive, encouraging language\n\n"
             "Focus on evidence-based, actionable insights that can help prevent "
-            "or manage diabetes."
+            "or manage diabetes, while keeping the content accessible and easy to understand "
+            "for non-medical readers."
         )
 
         try:
@@ -86,8 +99,12 @@ class LLMService:
             if completion and completion.choices:
                 content = completion.choices[0].message.content
 
-                # Parse the response
-                sections = content.split("\n\n")
+                if content is not None:
+                    # Parse the response
+                    sections = content.split("\n\n")
+                else:
+                    sections = []  # Handle case where content is None
+
                 risk_assessment = ""
                 recommendations = []
                 preventive_measures = []
@@ -100,27 +117,40 @@ class LLMService:
 
                     if "Risk Assessment:" in section:
                         current_section = "risk"
-                        risk_assessment = section.replace(
-                            "Risk Assessment:", ""
-                        ).strip()
+                        risk_assessment = (
+                            section.replace("Risk Assessment:", "")
+                            .replace("1.", "")
+                            .strip()
+                            .replace("**", "")
+                        )
                     elif "Key Recommendations:" in section:
                         current_section = "recommendations"
+                        section_content = (
+                            section.replace("Key Recommendations:", "")
+                            .replace("2.", "")
+                            .strip()
+                        )
                         # Extract lines that look like recommendations
                         recommendations.extend(
                             [
-                                line.strip("- ").strip()
-                                for line in section.split("\n")
+                                line.strip("- ").strip("* ").strip().replace("**", "")
+                                for line in section_content.split("\n")
                                 if line.strip().startswith("-")
                                 or line.strip().startswith("*")
                             ]
                         )
                     elif "Preventive Measures:" in section:
                         current_section = "measures"
+                        section_content = (
+                            section.replace("Preventive Measures:", "")
+                            .replace("3.", "")
+                            .strip()
+                        )
                         # Extract lines that look like preventive measures
                         preventive_measures.extend(
                             [
-                                line.strip("- ").strip()
-                                for line in section.split("\n")
+                                line.strip("- ").strip("* ").strip().replace("**", "")
+                                for line in section_content.split("\n")
                                 if line.strip().startswith("-")
                                 or line.strip().startswith("*")
                             ]
@@ -130,7 +160,7 @@ class LLMService:
                         # assume it's part of the current list
                         recommendations.extend(
                             [
-                                line.strip("- ").strip()
+                                line.strip("- ").strip("* ").strip().replace("**", "")
                                 for line in section.split("\n")
                                 if line.strip()
                                 and (
@@ -145,7 +175,7 @@ class LLMService:
                         # assume it's part of the current list
                         preventive_measures.extend(
                             [
-                                line.strip("- ").strip()
+                                line.strip("- ").strip("* ").strip().replace("**", "")
                                 for line in section.split("\n")
                                 if line.strip()
                                 and (
@@ -172,7 +202,7 @@ class LLMService:
                 "risk_assessment": "Unable to generate risk assessment at this time.",
                 "recommendations": [
                     "Consult with healthcare providers for personalized "
-                    "recommendations",
+                    "recommendationsdd",
                     "Monitor blood glucose levels regularly",
                     "Maintain a healthy lifestyle",
                     "Follow a balanced diet",

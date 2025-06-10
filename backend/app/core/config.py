@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     # API settings
     API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Diabetes Analysis API"
+    PROJECT_NAME: str = "Diabetes Risk Assesment"
 
     # Database settings
     POSTGRES_USER: str = "postgres"
@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     EMAIL_USER: str = ""  # Gmail address
     EMAIL_PASSWORD: str = ""  # Gmail app password
     EMAIL_RECIPIENT: str = ""  # Recipient email address
+    EMAIL_HOST: str = "smtp.gmail.com"  # SMTP server host
+    EMAIL_PORT: int = 587  # SMTP server port
 
     # LLM settings
     HUGGINGFACE_API_KEY: str = ""  # Hugging Face API key

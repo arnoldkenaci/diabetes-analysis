@@ -1,11 +1,7 @@
-from app.api.v1.endpoints import analyze as analyze_router
-from app.api.v1.endpoints import data as data_router
-from app.api.v1.endpoints import insights as insights_router
 from fastapi import APIRouter
 
+from .endpoints import diabetes, users
+
 api_router = APIRouter()
-
-
-api_router.include_router(data_router.router, prefix="/data")
-api_router.include_router(insights_router.router, prefix="/insights")
-api_router.include_router(analyze_router.router, prefix="/analyze")
+api_router.include_router(users.router, prefix="/users", tags=["users"])
+api_router.include_router(diabetes.router, prefix="/diabetes", tags=["diabetes"])
