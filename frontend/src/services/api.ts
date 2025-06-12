@@ -70,36 +70,6 @@ export interface HealthAssessmentResponse {
   updated_at: string | null;
 }
 
-// API functions
-/**
- * Creates a new health assessment for a user and diabetes record.
- * @param userId The ID of the user.
- * @param diabetesRecordId The ID of the diabetes record.
- * @returns The created health assessment data.
- * @throws Error if health assessment creation fails.
- */
-export const createHealthAssessment = async (
-  userId: number,
-  diabetesRecordId: number
-): Promise<HealthAssessmentResponse> => {
-  try {
-    const response = await api.post<HealthAssessmentResponse>(
-      `/api/v1/health-assessments`,
-      { user_id: userId, diabetes_record_id: diabetesRecordId }
-    );
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(
-        error.response?.data?.detail || "Failed to create health assessment"
-      );
-    }
-    throw new Error(
-      "An unexpected error occurred during health assessment creation"
-    );
-  }
-};
-
 /**
  * Fetches a specific health assessment by ID
  * @param assessmentId The ID of the health assessment to fetch
@@ -176,7 +146,6 @@ export const createInitialUserWithRecord = async (
 ): Promise<{
   user: UserResponse;
   record: DiabetesRecordResponse;
-  assessment: HealthAssessmentResponse;
 }> => {
   try {
     let user: UserResponse;
@@ -198,13 +167,9 @@ export const createInitialUserWithRecord = async (
       user_id: user.id,
     });
 
-    // Create health assessment for the new record
-    const assessment = await createHealthAssessment(user.id, record.id);
-
     return {
       user,
       record,
-      assessment,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

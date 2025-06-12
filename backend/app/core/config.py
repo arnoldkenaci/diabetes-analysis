@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     """Application settings."""
 
     model_config = SettingsConfigDict(
-        env_file=".env", case_sensitive=True, extra="ignore"
+        env_file="../.env", case_sensitive=True, extra="ignore"
     )
 
     # API settings
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "dataset_analysis"
-    DB_HOST: str = "localhost"
+    DB_HOST: str = "db"
     DB_PORT: str = "5432"
 
     # Analysis settings
@@ -33,7 +33,6 @@ class Settings(BaseSettings):
     # Email settings
     EMAIL_USER: str = ""  # Gmail address
     EMAIL_PASSWORD: str = ""  # Gmail app password
-    EMAIL_RECIPIENT: str = ""  # Recipient email address
     EMAIL_HOST: str = "smtp.gmail.com"  # SMTP server host
     EMAIL_PORT: int = 587  # SMTP server port
 

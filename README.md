@@ -1,103 +1,61 @@
-# Automated Dataset Analysis Web App
+# Diabetes Risk Assessment Web App
 
-A modern web application that automatically analyzes datasets, generates insights, and provides actionable recommendations using AI/ML capabilities.
+A modern web application that provides personalized diabetes risk assessments, generates insights, and offers actionable recommendations using AI/ML capabilities.
 
 ## 🎯 Project Goals
 
-- Automate dataset analysis and insight generation
-- Provide real-time notifications for significant findings
-- Create an intuitive dashboard for data visualization
-- Generate natural language summaries and recommendations
-- Enable scheduled/triggered analysis workflows
+- Provide personalized diabetes risk assessment based on health data.
+- Generate natural language health recommendations and preventive measures.
+- Offer a clear dashboard to visualize individual assessment results.
+- Enable a straightforward user journey for new and returning users.
 
 ## 🛠 Tech Stack
 
 - **Backend**: FastAPI (Python)
-- **Frontend**: React
+- **Frontend**: React, Material-UI
 - **Database**: PostgreSQL
-- **Notifications**: Slack
-- **AI/ML**: Hugging Face API
+- **Notifications**: Slack (backend integration)
+- **AI/ML**: `scikit-learn` for risk assessment, Hugging Face API for LLM recommendations
 
 ## 📋 Prerequisites
 
-- Python 3.8+
-- Node.js 16+
-- PostgreSQL 13+
+- Docker and Docker Compose
 - Git
 
 ## 🚀 Setup Instructions
 
-### Backend Setup
+### Using Docker Compose (Recommended)
 
-1. Navigate to the backend directory:
+1.  **Clone the repository:**
 
-   ```bash
-   cd backend
-   ```
+    ```bash
+    git clone <your-repository-url>
+    cd capsLock\ Project # Navigate to your project directory
+    ```
 
-2. Create and activate a virtual environment:
+2.  **Create a `.env` file:**
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+    In the root of your project directory (where `docker-compose.yml` is located), create a file named `.env` and add your database credentials:
 
-3. Install dependencies:
+    ```dotenv
+    DB_USER=postgres
+    DB_PASSWORD=postgres
+    DB_NAME=diabetes_analysis
+    # Add any other environment variables required by your backend services here
+    # Example: HUGGING_FACE_API_KEY=your_hugging_face_api_key
+    ```
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+3.  **Build and run the services:**
 
-4. Set up environment variables:
+    This command will build the Docker images, create the necessary containers, run database migrations, and load initial dataset data.
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+    ```bash
+    docker compose up --build
+    ```
 
-5. Run the development server:
-   ```bash
-   uvicorn main:app --reload
-   ```
-
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Set up environment variables:
-
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-### Database Setup
-
-1. Install PostgreSQL if not already installed
-2. Create a new database:
-   ```sql
-   CREATE DATABASE dataset_analysis;
-   ```
-3. Run migrations (when available):
-   ```bash
-   cd backend
-   alembic upgrade head
-   ```
+    - The `init_db` service will ensure migrations are applied and the dataset is loaded before the backend starts.
+    - The `backend` service will run on `http://localhost:8000`.
+    - The `frontend` service will be accessible on `http://localhost:80`.
 
 ## 📚 API Documentation
 
@@ -108,10 +66,10 @@ Once the backend server is running, visit:
 
 ## 🔄 Development Workflow
 
-1. Create a new branch for your feature
-2. Make your changes
-3. Write/update tests
-4. Submit a pull request
+1.  Create a new branch for your feature.
+2.  Make your changes.
+3.  Write/update tests.
+4.  Submit a pull request.
 
 ## 📝 Project Structure
 
@@ -121,16 +79,17 @@ Once the backend server is running, visit:
 ├── frontend/         # React frontend
 ├── docs/            # Project documentation
 ├── .gitignore
-└── README.md
+├── README.md
+└── docker-compose.yml
 ```
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+1.  Fork the repository.
+2.  Create your feature branch.
+3.  Commit your changes.
+4.  Push to the branch.
+5.  Create a Pull Request.
 
 ## 📄 License
 

@@ -1,11 +1,13 @@
 from pathlib import Path
 from typing import Optional
-from .config import get_settings
+
 from dotenv import load_dotenv
+
+from .config import get_settings
 
 settings = get_settings()
 
-load_dotenv()
+load_dotenv("../.env")
 import kaggle
 
 # Dataset configuration

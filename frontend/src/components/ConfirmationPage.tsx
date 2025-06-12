@@ -23,15 +23,6 @@ const ConfirmationPage = () => {
       <Typography variant="body1" paragraph>
         You will receive an email with your results shortly.
       </Typography>
-      <Box sx={{ mt: 4 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate("/")}
-        >
-          Return to Home
-        </Button>
-      </Box>
     </Paper>
   );
 };

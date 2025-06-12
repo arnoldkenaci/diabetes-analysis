@@ -71,15 +71,8 @@ const InitialForm = () => {
         age: Number(formData.age),
       };
 
-      const { assessment } = await createInitialUserWithRecord(
-        userData,
-        recordData
-      );
-      navigate(
-        `/dashboard?assessment_id=${assessment.id}&existing_user=${
-          error && axios.isAxiosError(error) && error.response?.status === 409
-        }`
-      );
+      await createInitialUserWithRecord(userData, recordData);
+      navigate("/confirmation");
     } catch (error) {
       console.error("Error submitting form:", error);
       setError(
