@@ -13,6 +13,7 @@ alembic==1.13.1
 pandas==2.2.1
 kaggle==1.5.16
 numpy==1.26.4
+scikit-learn==1.4.1.post1
 
 # Scheduling
 apscheduler==3.10.4
