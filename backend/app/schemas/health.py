@@ -4,11 +4,17 @@ from typing import List
 from pydantic import BaseModel, Field
 
 
+class RecommendationDetails(BaseModel):
+    risk_assessment: str
+    recommendations: List[str]
+    preventive_measures: List[str]
+
+
 class HealthAssessmentBase(BaseModel):
     risk_score: float = Field(..., description="Calculated risk score (0-1)")
     risk_level: str = Field(..., description="Risk level (low/medium/high)")
-    recommendations: List[str] = Field(
-        ..., description="List of health recommendations"
+    recommendations: RecommendationDetails = Field(
+        ..., description="Details of health recommendations"
     )
 
 
