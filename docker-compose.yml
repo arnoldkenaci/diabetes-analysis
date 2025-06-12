@@ -5,19 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=dataset_analysis
-      - DB_HOST=db
-      - DB_PORT=5432
-      - KAGGLE_USERNAME=arnoldkenaci
-      - KAGGLE_KEY=b06960c7b99dc22c86cba403f3162583
-      - EMAIL_USER="arnold.kenaci22@gmail.com"
-      - EMAIL_PASSWORD="usyq icfu uwvj wovn"
-      - EMAIL_RECIPIENT="arnold.kenaci1@gmail.com"
-      - HUGGINGFACE_API_KEY=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
-      - LLM_RATE_LIMIT=5
+    env_file:
+      - .env
     depends_on:
       - db
     volumes:
@@ -37,16 +26,18 @@ services:
   db:
     image: postgres:17.5
     container_name: dataset_analysis_db
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: diabetes_analysis
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
