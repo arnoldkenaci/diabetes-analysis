@@ -8,7 +8,6 @@ from app.models.user import User
 from app.services.llm import get_llm_recommendations
 from app.services.notification import NotificationService
 from sklearn.ensemble import RandomForestClassifier
-from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 settings = get_settings()
@@ -54,6 +53,9 @@ class HealthService:
         X = data.drop("outcome", axis=1)
         y = data["outcome"]
 
+        # Impute missing values with 0 (e.g., for 'pregnancies')
+        X = X.fillna(0)
+
         # Train model
         model = RandomForestClassifier(n_estimators=100, random_state=42)
         model.fit(X, y)
@@ -62,19 +64,19 @@ class HealthService:
     def _calculate_risk_score(self, record: DiabetesRecord) -> float:
         """Calculate risk score for a diabetes record."""
         # Create a list of feature values in the same order as training data
+        feature_values = [
+            float(record.pregnancies) if record.pregnancies is not None else 0.0,
+            float(record.glucose),
+            float(record.blood_pressure),
+            float(record.skin_thickness),
+            float(record.insulin),
+            float(record.bmi),
+            float(record.diabetes_pedigree),
+            float(record.age),
+        ]
+
         features = pd.DataFrame(
-            [
-                [
-                    record.pregnancies,
-                    record.glucose,
-                    record.blood_pressure,
-                    record.skin_thickness,
-                    record.insulin,
-                    record.bmi,
-                    record.diabetes_pedigree,
-                    record.age,
-                ]
-            ],
+            [feature_values],
             columns=[
                 "pregnancies",
                 "glucose",
@@ -86,6 +88,9 @@ class HealthService:
                 "age",
             ],
         )
+
+        # Impute missing values with 0 (e.g., for 'pregnancies')
+        features = features.fillna(0)
         return float(self.model.predict_proba(features)[0][1])
 
     def _determine_risk_level(self, risk_score: float) -> str:
@@ -117,11 +122,15 @@ class HealthService:
         }
 
     async def _send_notification(
-        self, user: User, risk_level: str, recommendations: Dict[str, Any]
+        self,
+        user: User,
+        risk_level: str,
+        recommendations: Dict[str, Any],
+        assessment_id: int,
     ) -> None:
         """Send notification with assessment results and recommendations."""
-        # Create dashboard URL
-        dashboard_url = f"http://localhost:80/dashboard/{user.id}"
+        # Create dashboard URL with assessment ID
+        dashboard_url = f"http://localhost:80/dashboard?assessment_id={assessment_id}"
 
         # Prepare notification data
         notification_data = {
@@ -173,7 +182,12 @@ class HealthService:
         self.db.commit()
         self.db.refresh(assessment)
 
-        # Send notification
-        await self._send_notification(user, risk_level, recommendations)
+        # Ensure assessment.id is an int for MyPy
+        assessment_id_for_notification: int = assessment.id
+
+        # Send notification with assessment ID
+        await self._send_notification(
+            user, risk_level, recommendations, assessment_id_for_notification
+        )
 
         return assessment
