@@ -21,7 +21,7 @@ class DiabetesRecord(Base):
     id = Column(Integer, primary_key=True, nullable=False)
 
     # Health Data
-    pregnancies = Column(Integer, nullable=False)
+    pregnancies = Column(Integer, nullable=True)
     glucose = Column(Integer, nullable=False)
     blood_pressure = Column(Integer, nullable=False)
     skin_thickness = Column(Integer, nullable=False)
@@ -31,7 +31,7 @@ class DiabetesRecord(Base):
     age = Column(Integer, nullable=False)
     outcome = Column(
         Boolean,
-        nullable=False,
+        nullable=True,
         default=False,
         comment="Whether the person has diabetes (1 = yes, 0 = no)",
     )

@@ -39,7 +39,7 @@ class UserInDB(UserBase):
         from_attributes = True
 
 
-class User(UserInDB):
+class UserResponse(UserInDB):
     """Schema for user data returned to the client."""
 
     pass

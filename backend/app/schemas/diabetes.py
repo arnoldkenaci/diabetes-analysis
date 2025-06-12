@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class DiabetesRecordBase(BaseModel):
     """Base schema for diabetes record data."""
 
-    pregnancies: int = Field(ge=0)
+    pregnancies: Optional[int] = Field(None, ge=0)
     glucose: int = Field(ge=0)
     blood_pressure: int = Field(ge=0)
     skin_thickness: int = Field(ge=0)
@@ -16,7 +16,7 @@ class DiabetesRecordBase(BaseModel):
     bmi: float = Field(ge=0.0)
     diabetes_pedigree: float = Field(ge=0.0)
     age: int = Field(ge=0)
-    outcome: bool = False
+    outcome: Optional[bool] = None
 
 
 class DiabetesRecordCreate(DiabetesRecordBase):

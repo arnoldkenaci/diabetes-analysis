@@ -2,19 +2,19 @@ from typing import Any
 
 from app.core.database import get_session
 from app.models.user import User
-from app.schemas.user import User as UserSchema
-from app.schemas.user import UserCreate
-from fastapi import APIRouter, Depends, HTTPException
+from app.schemas.user import UserCreate, UserResponse
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 
-@router.post("/", response_model=UserSchema)
+@router.post("/", response_model=UserResponse)
 def create_user(
     *,
     db: Session = Depends(get_session),
     user_in: UserCreate,
+    response: Response,
 ) -> Any:
     """
     Create new user.
@@ -22,10 +22,10 @@ def create_user(
     # Check if user with this email already exists
     user = db.query(User).filter(User.email == user_in.email).first()
     if user:
-        raise HTTPException(
-            status_code=400,
-            detail="A user with this email already exists.",
-        )
+        # Set 409 status code
+        response.status_code = 409
+        # Return existing user
+        return UserResponse(**user.__dict__)
 
     # Create new user
     user = User(
@@ -36,4 +36,6 @@ def create_user(
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+
+    # Return user
+    return UserResponse(**user.__dict__)
